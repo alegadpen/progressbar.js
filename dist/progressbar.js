@@ -1,9 +1,5 @@
-// ProgressBar.js 1.0.0
-// https://kimmobrunfeldt.github.io/progressbar.js
-// License: MIT
-
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.ProgressBar=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-/* shifty - v1.5.2 - 2016-02-10 - http://jeremyckahn.github.io/shifty */
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ProgressBar = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* shifty - v1.5.3 - 2016-11-29 - http://jeremyckahn.github.io/shifty */
 ;(function () {
   var root = this || Function('return this')();
 
@@ -355,9 +351,9 @@ var Tweenable = (function () {
     this._step = config.step || noop;
     this._finish = config.finish || noop;
     this._duration = config.duration || DEFAULT_DURATION;
-    this._currentState = shallowCopy({}, config.from) || this.get();
+    this._currentState = shallowCopy({}, config.from || this.get());
     this._originalState = this.get();
-    this._targetState = shallowCopy({}, config.to) || this.get();
+    this._targetState = shallowCopy({}, config.to || this.get());
 
     var self = this;
     this._timeoutHandler = function () {
@@ -1284,7 +1280,7 @@ var Tweenable = (function () {
     } else if (chunks.length === 1 ||
       // ...or if the string starts with a number component (".", "-", or a
       // digit)...
-    formattedString[0].match(R_NUMBER_COMPONENT)) {
+    formattedString.charAt(0).match(R_NUMBER_COMPONENT)) {
       // ...prepend an empty string here to make sure that the formatted number
       // is properly replaced by VALUE_PLACEHOLDER
       chunks.unshift('');
@@ -1697,7 +1693,7 @@ Circle.prototype._trailString = function _trailString(opts) {
 
 module.exports = Circle;
 
-},{"./shape":7,"./utils":8}],3:[function(require,module,exports){
+},{"./shape":7,"./utils":9}],3:[function(require,module,exports){
 // Line shaped progress bar
 
 var Shape = require('./shape');
@@ -1728,12 +1724,13 @@ Line.prototype._trailString = function _trailString(opts) {
 
 module.exports = Line;
 
-},{"./shape":7,"./utils":8}],4:[function(require,module,exports){
+},{"./shape":7,"./utils":9}],4:[function(require,module,exports){
 module.exports = {
     // Higher level API, different shaped progress bars
     Line: require('./line'),
     Circle: require('./circle'),
     SemiCircle: require('./semicircle'),
+    Square: require('./square'),
 
     // Lower level API to use any SVG path
     Path: require('./path'),
@@ -1747,7 +1744,7 @@ module.exports = {
     utils: require('./utils')
 };
 
-},{"./circle":2,"./line":3,"./path":5,"./semicircle":6,"./shape":7,"./utils":8}],5:[function(require,module,exports){
+},{"./circle":2,"./line":3,"./path":5,"./semicircle":6,"./shape":7,"./square":8,"./utils":9}],5:[function(require,module,exports){
 // Lower level API to animate any kind of svg path
 
 var Tweenable = require('shifty');
@@ -1760,6 +1757,11 @@ var EASING_ALIASES = {
 };
 
 var Path = function Path(path, opts) {
+    // Throw a better error if not initialized with `new` keyword
+    if (!(this instanceof Path)) {
+        throw new Error('Constructor was called without new keyword');
+    }
+
     // Default parameters for animation
     opts = utils.extend({
         duration: 800,
@@ -1916,7 +1918,7 @@ Path.prototype._easing = function _easing(easing) {
 
 module.exports = Path;
 
-},{"./utils":8,"shifty":1}],6:[function(require,module,exports){
+},{"./utils":9,"shifty":1}],6:[function(require,module,exports){
 // Semi-SemiCircle shaped progress bar
 
 var Shape = require('./shape');
@@ -1966,7 +1968,7 @@ SemiCircle.prototype._trailString = Circle.prototype._trailString;
 
 module.exports = SemiCircle;
 
-},{"./circle":2,"./shape":7,"./utils":8}],7:[function(require,module,exports){
+},{"./circle":2,"./shape":7,"./utils":9}],7:[function(require,module,exports){
 // Base object for different progress bar shapes
 
 var Path = require('./path');
@@ -2013,13 +2015,14 @@ var Shape = function Shape(container, opts) {
             },
             autoStyleContainer: true,
             alignToBottom: true,
-            value: '',
+            value: null,
             className: 'progressbar-text'
         },
         svgStyle: {
             display: 'block',
             width: '100%'
-        }
+        },
+        warnings: false
     }, opts, true);  // Use recursive extend
 
     // If user specifies e.g. svgStyle or text style, the whole object
@@ -2046,7 +2049,9 @@ var Shape = function Shape(container, opts) {
 
     this._container = element;
     this._container.appendChild(svgView.svg);
-    this._warnContainerAspectRatio(this._container);
+    if (this._opts.warnings) {
+        this._warnContainerAspectRatio(this._container);
+    }
 
     if (this._opts.svgStyle) {
         utils.setStyles(svgView.svg, this._opts.svgStyle);
@@ -2064,7 +2069,7 @@ var Shape = function Shape(container, opts) {
     }, this._opts);
     this._progressPath = new Path(svgView.path, newOpts);
 
-    if (utils.isObject(this._opts.text) && this._opts.text.value) {
+    if (utils.isObject(this._opts.text) && this._opts.text.value !== null) {
         this.setText(this._opts.text.value);
     }
 };
@@ -2265,7 +2270,7 @@ Shape.prototype._warnContainerAspectRatio = function _warnContainerAspectRatio(c
     if (!utils.floatEquals(this.containerAspectRatio, width / height)) {
         console.warn(
             'Incorrect aspect ratio of container',
-            this._container,
+            '#' + container.id,
             'detected:',
             computedStyle.getPropertyValue('width') + '(width)',
             '/',
@@ -2283,7 +2288,60 @@ Shape.prototype._warnContainerAspectRatio = function _warnContainerAspectRatio(c
 
 module.exports = Shape;
 
-},{"./path":5,"./utils":8}],8:[function(require,module,exports){
+},{"./path":5,"./utils":9}],8:[function(require,module,exports){
+// Square shaped progress bar
+// Note: Square is not core part of API anymore. It's left here
+//       for reference. square is not included to the progressbar
+//       build anymore
+
+var Shape = require('./shape');
+var utils = require('./utils');
+
+var Square = function Square(container, options) {
+    this._pathTemplate =
+        'M 0,{halfOfStrokeWidth}' +
+        ' L {width},{halfOfStrokeWidth}' +
+        ' L {width},{width}' +
+        ' L {halfOfStrokeWidth},{width}' +
+        ' L {halfOfStrokeWidth},{strokeWidth}';
+
+    this._trailTemplate =
+        'M {startMargin},{halfOfStrokeWidth}' +
+        ' L {width},{halfOfStrokeWidth}' +
+        ' L {width},{width}' +
+        ' L {halfOfStrokeWidth},{width}' +
+        ' L {halfOfStrokeWidth},{halfOfStrokeWidth}';
+
+    Shape.apply(this, arguments);
+};
+
+Square.prototype = new Shape();
+Square.prototype.constructor = Square;
+
+Square.prototype._pathString = function _pathString(opts) {
+    var w = 100 - opts.strokeWidth / 2;
+
+    return utils.render(this._pathTemplate, {
+        width: w,
+        strokeWidth: opts.strokeWidth,
+        halfOfStrokeWidth: opts.strokeWidth / 2
+    });
+};
+
+Square.prototype._trailString = function _trailString(opts) {
+    var w = 100 - opts.strokeWidth / 2;
+
+    return utils.render(this._trailTemplate, {
+        width: w,
+        strokeWidth: opts.strokeWidth,
+        halfOfStrokeWidth: opts.strokeWidth / 2,
+        startMargin: opts.strokeWidth / 2 - opts.trailWidth / 2
+    });
+};
+
+module.exports = Square;
+
+},{"./shape":7,"./utils":9}],9:[function(require,module,exports){
 // Utility functions
 
 var PREFIXES = 'Webkit Moz O ms'.split(' ');
